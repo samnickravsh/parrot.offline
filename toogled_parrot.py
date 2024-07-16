@@ -4,17 +4,17 @@ import threading
 import curses
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
-# Directory containing the frame files
+
 frames_dir = 'frames'
 frame_files = sorted(os.listdir(frames_dir))
 
-# Load frames into memory
+
 frames = []
 for frame_file in frame_files:
     with open(os.path.join(frames_dir, frame_file), 'r') as file:
         frames.append(file.read())
 
-# Color options using curses color pairs
+
 color_pairs = [
     curses.COLOR_RED,
     curses.COLOR_YELLOW,
@@ -25,10 +25,10 @@ color_pairs = [
     curses.COLOR_WHITE,
 ]
 
-# Default delay time
+
 delay = 0.05
 
-# Function to handle key presses
+
 def handle_input(stdscr):
     global delay
     stdscr.nodelay(True)
@@ -54,12 +54,12 @@ def handle_input(stdscr):
             delay = 0.09
         elif key == ord('0'):
             delay = 2
-        time.sleep(0.25)  # Small sleep to reduce CPU usage
+        time.sleep(0.25)
 
-# Function to display the frames in a loop
+
 def display_frames(stdscr):
     try:
-        curses.curs_set(0)  # Hide cursor
+        curses.curs_set(0)
         color_index = 0
         while True:
             for frame in frames:
@@ -71,7 +71,7 @@ def display_frames(stdscr):
     except KeyboardInterrupt:
         curses.curs_set(1)  # Show cursor
 
-# HTTP request handler
+
 class ParrotHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/':
@@ -102,22 +102,21 @@ class ParrotHandler(SimpleHTTPRequestHandler):
             self.send_error(404)
             self.end_headers()
 
-# Function to start the HTTP server
+
 def start_server():
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, ParrotHandler)
     print("Serving on port 8000...")
     httpd.serve_forever()
 
-# Main function to run the server and display frames
+
 def main(stdscr):
-    # Use ANSI escape code to set background to black and clear the screen
     os.system('printf "\033[48;2;0;0;0m\033[2J\033[H"')
 
-    # Start the HTTP server in a separate thread
-    threading.Thread(target=start_server, daemon=True).start()
     
-    # Initialize color pairs in curses
+    threading.Thread(target=start_server, daemon=True).start()
+
+
     curses.start_color()
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
@@ -127,17 +126,16 @@ def main(stdscr):
     curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
     curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLACK)
 
-    # Set the background color to black
+
     stdscr.bkgd(' ', curses.color_pair(7))  # Use color pair 7 as default background color (black)
     stdscr.clear()
     stdscr.refresh()
 
-    # Start the frame display in a separate thread
+
     threading.Thread(target=display_frames, args=(stdscr,), daemon=True).start()
 
-    # Handle user input for speed control
+
     handle_input(stdscr)
 
 if __name__ == "__main__":
-    # Start the curses application to handle key presses and display frames
     curses.wrapper(main)
